@@ -6,7 +6,7 @@
 /*   By: vportell <vportell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/19 14:15:19 by vportell          #+#    #+#             */
-/*   Updated: 2016/12/22 20:16:52 by vportell         ###   ########.fr       */
+/*   Updated: 2016/12/22 22:37:49 by vportell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ void	print_dec(char **s, t_format *format, long arg)
 	if (format->flag->space && !format->flag->plus &&
 		(int)ft_strlen(*s) == format->min_width && format->precision == -1)
 	{
-		p = ft_strsub(*s, 0, ft_strlen(*s) - 1);
+		p = ft_strsub(*s, 1, ft_strlen(*s) - 1);
 		ft_strdel(s);
 		*s = ft_strjoin(" ", p);
 		ft_strdel(&p);
