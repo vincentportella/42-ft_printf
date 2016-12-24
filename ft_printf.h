@@ -6,7 +6,7 @@
 /*   By: vportell <vportell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/09 15:13:08 by vportell          #+#    #+#             */
-/*   Updated: 2016/12/22 14:31:03 by vportell         ###   ########.fr       */
+/*   Updated: 2016/12/23 20:13:01 by vportell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,15 @@
 # include <locale.h>
 # include "libft/libft.h"
 
-int	g_length;
+
 
 //*************************************
 
 // REMOVE
 
 # include <stdio.h>
+
+int	g_length;
 
 # define c_max 127
 # define s_max 32767
@@ -55,6 +57,13 @@ typedef struct		s_format
 	int				type;
 }					t_format;
 
+typedef struct		s_string
+{
+	char			*str;
+	int				len;
+	struct s_string	*next;
+}					t_string;
+
 int		get_flags(char *s, t_format *format, int *i);
 void	get_precision(char *s, t_format *format, int *i);
 void	get_length(char *s, t_format *format, int *i);
@@ -73,7 +82,7 @@ void	print_ch2(char **s, t_format *format, void *arg);
 void	print_str(char **s, t_format *format, void *arg);
 void	print_st2(char **s, t_format *format, void *arg);
 
-void	print_pct(char **s, t_format **format);
+void	print_pct(t_string **s, t_format **format);
 
 void	print_bin(char **s, t_format *format, unsigned long arg);
 void	print_dec(char **s, t_format *format, long arg);
@@ -90,6 +99,7 @@ void	format_uns(char **s, t_format *format, void *arg);
 void	format_oct(char **s, t_format *format, void *arg);
 void	format_hex(char **s, t_format *format, void *arg);
 
+int		wchar_len(wchar_t const n);
 char	*wchar_to_char(wchar_t const n);
 char	*gen_wstr(wchar_t const *n, int *len);
 char	*gen_nwstr(wchar_t const *n, int d);

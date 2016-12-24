@@ -6,33 +6,74 @@
 /*   By: vportell <vportell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/09 15:12:01 by vportell          #+#    #+#             */
-/*   Updated: 2016/12/22 20:01:10 by vportell         ###   ########.fr       */
+/*   Updated: 2016/12/23 20:54:29 by vportell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-void	append_str(char *s, char **str)
+t_string	*create_string(char *str)
 {
-	char *t;
+	t_string	*string;
 
-	if (*str)
-	{
-		t = ft_strdup(*str);
-		ft_strdel(str);
-		*str = ft_strjoin(t, s);
-		ft_strdel(&t);
-	}
-	else
-		*str = ft_strdup(s);
+	string = (t_string *)malloc(sizeof(t_string));
+	string->str = str;
+	string->len = 0;
+	string->next = NULL;
+	return (string);
 }
 
-void	print_err(char *s, char **str, t_format **format)
+void	append_str(char *s, t_string **str, t_format *format)
+{
+	t_string *temp;
+
+	temp = *str;
+	if (*str)
+	{
+		while (temp->next)
+			temp = temp->next;
+		temp->next = create_string(ft_strdup(s));
+		if (format->type == 13 && format->length < 3)
+			temp->next->len = format->min_width ? format->min_width : 1;
+		else if (format->type == 14)
+		{
+			if (format->min_width)
+				temp->next->len = format->min_width + ft_strlen(s) - 1;
+			else
+			{
+				if (ft_strlen(s) == 0)
+					temp->next->len = 1;
+				else
+					temp->next->len = ft_strlen(s);
+			}
+		}
+	}
+	else
+	{
+		*str = create_string(ft_strdup(s));
+		if (format->type == 13 && format->length < 3)
+			temp->len = format->min_width ? format->min_width : 1;
+		else if (format->type == 14)
+		{
+			if (format->min_width)
+				temp->len = format->min_width + ft_strlen(s) - 1;
+			else
+			{
+				if (ft_strlen(s) == 0)
+					temp->len = 1;
+				else
+					temp->len = ft_strlen(s);
+			}
+		}
+	}
+}
+
+void	print_err(char *s, t_string **str, t_format **format)
 {
 	char *p;
 	char *t;
 	char *n;
-	
+
 	if ((*format)->min_width > 0)
 	{
 		p = ft_strnew((*format)->min_width - 1);
@@ -46,7 +87,7 @@ void	print_err(char *s, char **str, t_format **format)
 	n = ft_strnew(2);
 	n[0] = s[0];
 	t = (*format)->flag->minus ? ft_strjoin(n, p) : ft_strjoin(p, n);
-	append_str(t, str);
+	append_str(t, str, *format);
 	ft_strdel(&p);
 	ft_strdel(&n);
 	ft_strdel(&t);
@@ -54,7 +95,7 @@ void	print_err(char *s, char **str, t_format **format)
 	free(*format);
 }
 
-void	print_pct(char **str, t_format **format)
+void	print_pct(t_string **str, t_format **format)
 {
 	char *t;
 	char *p;
@@ -75,7 +116,7 @@ void	print_pct(char **str, t_format **format)
 		ft_strdel(&t);
 		ft_strdel(&p);
 	}
-	append_str(s, str);
+	append_str(s, str, *format);
 	free((*format)->flag);
 	free(*format);
 	ft_strdel(&s);
@@ -134,7 +175,7 @@ int		parse_format(char *s, int *b, t_format **format)
 	return (i);
 }
 
-int		append_result(char *s, void *arg, char **str, t_format **format)
+int		append_result(char *s, void *arg, t_string **str, t_format **format)
 {
 	char *tmp;
 
@@ -145,25 +186,84 @@ int		append_result(char *s, void *arg, char **str, t_format **format)
 		print_err(s, str, format);
 		return (1);
 	}
-	append_str(tmp, str);
+	append_str(tmp, str, *format);
 	free((*format)->flag);
 	free(*format);
 	free(tmp);
 	return (0);
 }
 
-int		append_filler(char *s, char **str, int i, int c)
+int		append_filler(char *s, t_string **str, int i, int c)
 {
-	char *d;
+	t_string *temp;
 
-	if (c)
+	temp = *str;
+	if (*str)
 	{
-		d = ft_strsub(s, i - c, c);
-		append_str(d, str);
-		ft_strdel(&d);
+		while (temp->next)
+			temp = temp->next;
+		temp->next = create_string(ft_strsub(s, i - c, c));
 	}
+	else
+		*str = create_string(ft_strsub(s, i - c, c));
 	return (0);
 }
+
+int		ft_printf(const char *format, ...)
+{
+	int			i;
+	int			c;
+	char		*s;
+	t_format	*fmt;
+	t_string	*str;
+	
+	c = 0;
+	i = -1;
+	str = 0;
+	va_list ap;
+	g_length = 0;
+	va_start(ap, format);
+	s = ft_strdup(format);
+	while (s[++i])
+	{
+		if (s[i] == '%')
+		{
+			c = append_filler(s, &str, i, c);
+			i += parse_format(s + i + 1, &c, &fmt);
+			if (c)
+				i += append_result(s + i + 1, va_arg(ap, void *), &str, &fmt);
+			else
+				print_pct(&str, &fmt);
+			c = 0;
+		}
+		else
+			c++;
+	}
+	c = append_filler(s, &str, i, c);
+	va_end(ap);
+	while (str)
+	{
+		if (str->len > 0)
+		{
+			i = -1;
+			while (++i < str->len)
+				ft_putchar((str->str)[i]);
+			c += str->len;
+		}
+		else if (str->str)
+		{
+			ft_putstr(str->str);
+			c += ft_strlen(str->str);
+		}
+		str = str->next;
+	}
+	return (c);
+}
+
+
+
+
+
 
 // void	read_print(char *s, char **str, va_list *args, int *c)
 // {
@@ -188,94 +288,17 @@ int		append_filler(char *s, char **str, int i, int c)
 // 	*c = append_filler(s, &str, i, *c);
 // }
 
-int		ft_printf(const char *format, ...)
-{
-	int			i;
-	int			c;
-	int			b;
-	char		*s;
-	char		*str;
-	t_format	*fmt;
-	
-	b = 0;
-	c = 0;
-	i = -1;
-	str = 0;
-	va_list ap;
-	g_length = 0;
-	va_start(ap, format);
-	s = ft_strdup(format);
-	while (s[++i])
-	{
-		if (s[i] == '%')
-		{
-			c = append_filler(s, &str, i, c);
-			i += parse_format(s + i + 1, &b, &fmt);
-			if (b)
-				i += append_result(s + i + 1, va_arg(ap, void *), &str, &fmt);
-			else
-				print_pct(&str, &fmt);
-		}
-		else
-			c++;
-		b = 0;
-	}
-	c = append_filler(s, &str, i, c);
-	va_end(ap);
-	if (str)
-	{
-		c = ft_strlen(str);
-		ft_putstr(str);
-		ft_strdel(&str);
-		ft_strdel(&s);
-	}
-	return (c += g_length);
-}
-
-// int		ft_printf(const char *format, ...)
-// {
-// 	int		i;
-// 	int		c;
-// 	char	*s;
-// 	char	*str;
-	
-// 	c = 0;
-// 	i = -1;
-// 	str = 0;
-// 	va_list ap;
-// 	va_start(ap, format);
-// 	s = ft_strdup(format);
-// 	while (s[++i])
-// 	{
- 
-// 		if (s[i] == '%')
-// 		{
-// 			c = append_filler(s, &str, i, c);
-// 			i += parse_format(s + i + 1, va_arg(ap, void *), &str);
-// 		}
-// 		else
-// 			c++;
 
 
-// 		// if (s[i] == '%' && s[i + 1] == '%' && ++i)
-// 		// 	c = append_filler(s, &str, i, c + 1);
-// 		// else if (s[i] == '%' && s[i + 1] != '%')
-// 		// {
-// 		// 	c = append_filler(s, &str, i, c);
-// 		// 	i += parse_format(s + i + 1, va_arg(ap, void *), &str);
-// 		// }
-// 		// else
-// 		// 	c++;
 
-// 	}
-// 	va_end(ap);
-// 	c = append_filler(s, &str, i, c);
-// 	if (str)
-// 	{
-// 		c = ft_strlen(str);
-// 		ft_putstr(str);
-// 		ft_strdel(&str);
-// 		ft_strdel(&s);
-// 	}
-// 	return (c);
-// }
+
+
+
+
+
+
+
+
+
+
+

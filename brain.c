@@ -6,11 +6,24 @@
 /*   By: vportell <vportell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/19 14:20:38 by vportell          #+#    #+#             */
-/*   Updated: 2016/12/22 20:21:11 by vportell         ###   ########.fr       */
+/*   Updated: 2016/12/23 20:12:52 by vportell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
+
+int		wchar_len(wchar_t const n)
+{
+	if (n <= 0x7F)
+		return (1);
+	else if (n <= 0x7FF)
+		return (2);
+	else if (n <= 0xFFFF)
+		return (3);
+	else if (n <= 0x10FFFF)
+		return (4);
+	return (0);
+}
 
 char	*wchar_to_char(wchar_t const n)
 {
