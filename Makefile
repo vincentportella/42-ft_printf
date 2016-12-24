@@ -6,7 +6,7 @@
 #    By: vportell <vportell@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/12/18 01:47:06 by vportell          #+#    #+#              #
-#    Updated: 2016/12/23 22:18:09 by vportell         ###   ########.fr        #
+#    Updated: 2016/12/24 06:12:24 by vportell         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,15 +17,20 @@ CFLAGS = -Wall -Wextra -Werror
 LIB_DIR = ./libft
 
 SRCS =	ft_printf.c \
+		setup.c \
 		parse.c \
+		append.c \
 		format.c \
+		format_2.c \
 		print_1.c \
 		print_2.c \
+		print_3.c \
+		print_4.c \
+		print_5.c \
 		print_segments.c \
 		brain.c \
-
-		# alloc_wrap.c
-
+		wchar_parse.c
+		
 OBJS = $(SRCS:.c=.o)
 
 LIB_FILES =	ft_memset \
@@ -104,8 +109,6 @@ all: $(NAME)
 $(NAME): $(OBJS) $(LIB_OBJS)
 	ar rc $(NAME) $(LIB_OBJS) $(OBJS) 
 	ranlib $(NAME)
-	# gcc main.c libftprintf.a
-	# ./a.out
 	
 clean:
 	$(RM) $(OBJS)

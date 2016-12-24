@@ -6,7 +6,7 @@
 /*   By: vportell <vportell@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/19 14:15:19 by vportell          #+#    #+#             */
-/*   Updated: 2016/12/22 22:37:49 by vportell         ###   ########.fr       */
+/*   Updated: 2016/12/24 03:27:58 by vportell         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,25 +14,13 @@
 
 void	print_bin(char **s, t_format *format, unsigned long arg)
 {
-	int len;
 	char *t;
 	char *p;
 	char *k;
 
 	*s = ft_ltoa_base(arg, 2, "01");
-	len = ft_strlen(*s);
-	if (format->period && format->precision < len && !arg)
-	{
-		len = format->precision < 0 ? 0 : format->precision;
-		k = ft_strsub(*s, ft_strlen(*s) - len, len);
-		ft_strdel(s);
-		*s = ft_strdup(k);
-		ft_strdel(&k);
-	}
-	format_precision(*s, format, &p, &k);
-	!p ? p = ft_strdup("") : 0;
-	format_width(*s, format, &p, &k);
-	!k ? k = ft_strdup("") : 0;
+	format_setup_1(s, format, arg, &k);
+	format_setup_2(*s, format, &p, &k);
 	t = ft_strlen(p) ? ft_strjoin(p, *s) : ft_strjoin(*s, p);
 	ft_strdel(&p);
 	ft_strdel(s);
@@ -48,32 +36,33 @@ void	print_bin(char **s, t_format *format, unsigned long arg)
 	ft_strdel(&k);
 }
 
+void	dec_assist(char **s, t_format *format, char **p, char **k)
+{
+	ft_strdel(p);
+	ft_strdel(k);
+	if (format->flag->space && !format->flag->plus &&
+		(int)ft_strlen(*s) == format->min_width && format->precision == -1)
+	{
+		*p = ft_strsub(*s, 1, ft_strlen(*s) - 1);
+		ft_strdel(s);
+		*s = ft_strjoin(" ", *p);
+		ft_strdel(p);
+	}
+}
+
 void	print_dec(char **s, t_format *format, long arg)
 {
-	int i;
-	int len;
-	char *t;
-	char *p;
-	char *k;
+	int		i;
+	char	*t;
+	char	*p;
+	char	*k;
 
 	*s = utoa(arg);
-	len = ft_strlen(*s);
-	if (format->period && format->precision < len && !arg)
-	{
-		len = format->precision < 0 ? 0 : format->precision;
-		k = ft_strsub(*s, ft_strlen(*s) - len, len);
-		ft_strdel(s);
-		*s = ft_strdup(k);
-		ft_strdel(&k);
-	}
-	format_precision(*s, format, &p, &k);
-	!p ? p = ft_strdup("") : 0;
-	format_width(*s, format, &p, &k);
-	!k ? k = ft_strdup("") : 0;
+	format_setup_1(s, format, arg, &k);
+	format_setup_2(*s, format, &p, &k);
 	t = ft_strlen(p) ? ft_strjoin(p, *s) : ft_strjoin(*s, p);
 	i = k[0] == '0' ? 0 : 1;
-	if (i == 1)
-		format_sign(&t, format, arg);
+	i == 1 ? format_sign(&t, format, arg) : 0;
 	format_space(&t, format, k);
 	ft_strdel(&p);
 	ft_strdel(s);
@@ -84,126 +73,33 @@ void	print_dec(char **s, t_format *format, long arg)
 		k = ft_strdup(p);
 	}
 	*s = format->flag->minus ? ft_strjoin(t, k) : ft_strjoin(k, t);
-	if (i == 0)
-		format_sign(s, format, arg);
-	ft_strdel(&p);
+	i == 0 ? format_sign(s, format, arg) : 0;
 	ft_strdel(&t);
-	ft_strdel(&k);
-
-	if (format->flag->space && !format->flag->plus &&
-		(int)ft_strlen(*s) == format->min_width && format->precision == -1)
-	{
-		p = ft_strsub(*s, 1, ft_strlen(*s) - 1);
-		ft_strdel(s);
-		*s = ft_strjoin(" ", p);
-		ft_strdel(&p);
-	}
+	dec_assist(s, format, &p, &k);
 }
 
-void	print_uns(char **s, t_format *format, unsigned long arg)
+int		hex_assist(char **t, char **p, char **k, t_format *format)
 {
-	int len;
-	char *t;
-	char *p;
-	char *k;
-
-	*s = ft_ltoa_base(arg, 10, "0123456789");
-	len = ft_strlen(*s);
-	if (format->period && format->precision < len && !arg)
+	*t = ft_strlen(*k) > 1 ?
+	ft_strsub(*k, 2, ft_strlen(*k) - 2) : ft_strdup("");
+	ft_strdel(k);
+	if (format->flag->zero && !format->flag->minus &&
+		format->precision == -1)
 	{
-		len = format->precision < 0 ? 0 : format->precision;
-		k = ft_strsub(*s, ft_strlen(*s) - len, len);
-		ft_strdel(s);
-		*s = ft_strdup(k);
-		ft_strdel(&k);
+		*k = ft_strdup(*p);
+		ft_strdel(p);
+		*p = ft_strdup(*t);
+		ft_strdel(t);
+		*t = ft_strdup(*k);
+		ft_strdel(k);
 	}
-	format_precision(*s, format, &p, &k);
-	!p ? p = ft_strdup("") : 0;
-	format_width(*s, format, &p, &k);
-	!k ? k = ft_strdup("") : 0;
-	t = ft_strlen(p) ? ft_strjoin(p, *s) : ft_strjoin(*s, p);
-	ft_strdel(&p);
-	ft_strdel(s);
-	if (format->flag->plus && ft_strlen(k) > 0)
-	{
-		p = ft_strsub(k, 1, ft_strlen(k) - 1);
-		ft_strdel(&k);
-		k = ft_strdup(p);
-		ft_strdel(&p);
-	}
-	*s = format->flag->minus ? ft_strjoin(t, k) : ft_strjoin(k, t);
-	ft_strdel(&t);
-	ft_strdel(&k);
-}
-
-void	print_oct(char **s, t_format *format, unsigned long arg)
-{
-	int len;
-	char *t;
-	char *p;
-	char *k;
-
-	*s = ft_ltoa_base(arg, 8, "01234567");
-	len = ft_strlen(*s);
-	if (format->period && format->precision < len && !arg)
-	{
-		len = format->precision < 0 ? 0 : format->precision;
-		k = ft_strsub(*s, ft_strlen(*s) - len, len);
-		ft_strdel(s);
-		*s = ft_strdup(k);
-		ft_strdel(&k);
-	}
-	format_precision(*s, format, &p, &k);
-	!p ? p = ft_strdup("") : 0;
-	format_width(*s, format, &p, &k);
-	!k ? k = ft_strdup("") : 0;
-	if (format->flag->hash)
-	{
-		t = ft_strlen(k) > 0 ?
-		ft_strsub(k, 1, ft_strlen(k) - 1) : ft_strdup("");
-		ft_strdel(&k);
-		if (format->flag->zero && !format->flag->minus &&
-			format->precision == -1)
-		{
-			k = arg ? ft_strjoin("0", t) : ft_strdup(t);
-			ft_strdel(&t);
-			t = ft_strjoin(k, *s);
-			ft_strdel(s);
-			*s = format->flag->minus ? ft_strjoin(t, p) : ft_strjoin(p, t);
-		}
-		else
-		{
-			if ((size_t)format->precision < ft_strlen(p) + ft_strlen(*s) + 1 && arg > 0)
-			{
-				k = ft_strsub(p, 0, ft_strlen(p) - 1);
-				ft_strdel(&p);
-				p = ft_strdup(k);
-				ft_strdel(&k);
-			}
-			if (arg > 0 || format->period)
-				k = ft_strjoin("0", p);
-			else
-				k = ft_strdup(p);
-			ft_strdel(&p);
-			p = ft_strjoin(k, *s);
-			ft_strdel(s);
-			*s = format->flag->minus ? ft_strjoin(p, t) : ft_strjoin(t, p);
-		}
-	}
-	else
-	{
-		t = ft_strlen(p) ? ft_strjoin(p, *s) : ft_strjoin(*s, p);
-		ft_strdel(s);
-		*s = format->flag->minus ? ft_strjoin(t, k) : ft_strjoin(k, t);
-	}
-	ft_strdel(&p);
-	ft_strdel(&t);
-	ft_strdel(&k);
+	*k = format->type == 11 ? ft_strjoin("0x", *p) : ft_strjoin("0X", *p);
+	ft_strdel(p);
+	return (1);
 }
 
 void	print_hex(char **s, t_format *format, unsigned long arg)
 {
-	int len;
 	char *t;
 	char *p;
 	char *k;
@@ -212,41 +108,13 @@ void	print_hex(char **s, t_format *format, unsigned long arg)
 		*s = ft_ltoa_base(arg, 16, "0123456789abcdef");
 	else
 		*s = ft_ltoa_base(arg, 16, "0123456789ABCDEF");
-	len = ft_strlen(*s);
-	if (format->period && format->precision < len && !arg)
+	format_setup_1(s, format, arg, &k);
+	format_setup_2(*s, format, &p, &k);
+	if (format->flag->hash && arg && hex_assist(&t, &p, &k, format))
 	{
-		len = format->precision < 0 ? 0 : format->precision;
-		k = ft_strsub(*s, ft_strlen(*s) - len, len);
+		p = ft_strjoin(k, *s);
 		ft_strdel(s);
-		*s = ft_strdup(k);
-		ft_strdel(&k);
-	}
-	format_precision(*s, format, &p, &k);
-	!p ? p = ft_strdup("") : 0;
-	format_width(*s, format, &p, &k);
-	!k ? k = ft_strdup("") : 0;
-	if (format->flag->hash && arg)
-	{
-		t = ft_strlen(k) > 1 ?
-		ft_strsub(k, 2, ft_strlen(k) - 2) : ft_strdup("");
-		ft_strdel(&k);
-		if (format->flag->zero && !format->flag->minus &&
-			format->precision == -1)
-		{
-			k = format->type == 11 ? ft_strjoin("0x", t) : ft_strjoin("0X", t);
-			ft_strdel(&t);
-			t = ft_strjoin(k, *s);
-			ft_strdel(s);
-			*s = format->flag->minus ? ft_strjoin(t, p) : ft_strjoin(p, t);
-		}
-		else
-		{
-			k = format->type == 11 ? ft_strjoin("0x", p) : ft_strjoin("0X", p);
-			ft_strdel(&p);
-			p = ft_strjoin(k, *s);
-			ft_strdel(s);
-			*s = format->flag->minus ? ft_strjoin(p, t) : ft_strjoin(t, p);
-		}
+		*s = format->flag->minus ? ft_strjoin(p, t) : ft_strjoin(t, p);
 	}
 	else
 	{
@@ -258,51 +126,3 @@ void	print_hex(char **s, t_format *format, unsigned long arg)
 	ft_strdel(&t);
 	ft_strdel(&k);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
