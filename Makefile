@@ -6,7 +6,7 @@
 #    By: vportell <vportell@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/12/18 01:47:06 by vportell          #+#    #+#              #
-#    Updated: 2016/12/22 21:12:06 by vportell         ###   ########.fr        #
+#    Updated: 2016/12/23 22:18:09 by vportell         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -104,8 +104,8 @@ all: $(NAME)
 $(NAME): $(OBJS) $(LIB_OBJS)
 	ar rc $(NAME) $(LIB_OBJS) $(OBJS) 
 	ranlib $(NAME)
-	gcc main.c libftprintf.a
-	./a.out
+	# gcc main.c libftprintf.a
+	# ./a.out
 	
 clean:
 	$(RM) $(OBJS)
